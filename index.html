@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Data Application</title>
+    <style>
+        #loading {
+            display: none;
+            font-size: 1.5rem;
+            color: blue;
+        }
+        #error {
+            display: none;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Big Data Application</h1>
+    
+    <form id="data-form">
+        <input type="text" id="category" placeholder="Enter category">
+        <button type="submit">Rechercher</button>
+    </form>
+
+    <div id="loading">Chargement</div>
+    <div id="error">Une erreur est survenue lors de la récupération des données.</div>
+
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Catégorie</th>
+                <th>Données</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <h2>Ajouter de nouvelles données</h2>
+    <form id="add-data-form">
+        <input type="text" id="new-data-value" placeholder="Enter data">
+        <input type="text" id="new-category" placeholder="Enter category">
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <script>
+        document.getElementById('data-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const category = document.getElementById('category').value;
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const tableBody = document.getElementById('data-table').querySelector('tbody');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            tableBody.innerHTML = '';
+
+            fetch(`/data?category=${category}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    data.forEach(record => {
+                        const row = `<tr>
+                            <td>${record.id}</td>
+                            <td>${record.category}</td>
+                            <td>${record.data_value}</td>
+                            <td>${record.created_at}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(() => {
+                    error.style.display = 'block';
+                })
+                .finally(() => {
+                    loading.style.display = 'none';
+                });
+        });
+
+        document.getElementById('add-data-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const dataValue = document.getElementById('new-data-value').value;
+            const category = document.getElementById('new-category').value;
+
+            fetch('/data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data_value: dataValue,
+                    category: category
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.status);
+                document.getElementById('new-data-value').value = '';
+                document.getElementById('new-category').value = '';
+            });
+        });
+    </script>
+</body>
+</html>
