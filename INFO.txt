@@ -1,0 +1,4 @@
+Si vous souhaitez avoir un README tout propre avec toutes les instructions d'installation pour ce projet, je vous invite
+à consulter le repository de ce projet, disponible juste ici :
+
+https://github.com/TheKyyn/project_3
