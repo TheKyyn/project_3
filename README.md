@@ -1,66 +1,55 @@
-# Big Data Flask Project
+# Big Data Application Project - Hétic 2024 - WEB2
 
 ## Description
-This project is a Flask-based web application designed to work with a PostgreSQL database. It also integrates Prometheus for monitoring and Grafana for visualizing the metrics.
 
-## Technologies
-- **Python**: Flask for backend API
-- **PostgreSQL**: For data storage
-- **Docker**: For containerizing the application
-- **Prometheus**: For monitoring
-- **Grafana**: For visualization
-- **psycopg2**: PostgreSQL adapter for Python
+Ce projet est une application Big Data backend développée avec Python et Flask, accompagnée d'un frontend minimaliste en JavaScript Vanilla. Le but est de traiter et de gérer des données volumineuses en utilisant une base de données PostgreSQL optimisée pour le Big Data. L'infrastructure inclut Docker, Prometheus pour la surveillance, et Grafana pour la visualisation des métriques.
 
-## Requirements
-- Docker
-- Docker Compose
+## Table des Matières
 
-## Installation and Setup
+1. [Prérequis](#prérequis)
+2. [Installation et Configuration](#installation-et-configuration)
+3. [Utilisation](#utilisation)
+4. [Structure du Projet](#structure-du-projet)
+5. [Tests](#tests)
+6. [Surveillance et Monitoring](#surveillance-et-monitoring)
+7. [Endpoints API](#endpoints-api)
 
-### 1. Clone the Repository
+## Prérequis
 
-```bash
-git clone https://github.com/your_username/your_repo.git
-cd your_repo
-```
+- **Docker** et **Docker Compose** installés sur votre machine.
+- **Python 3.9** (pour exécuter et tester localement sans Docker).
+- **Git** pour cloner le dépôt.
 
-### 2. Set up the .env File
-Create a .env file to configure environment variables like the database credentials.
+## Installation et Configuration
+
+### Cloner le dépôt
 
 ```bash
-POSTGRES_DB=DB_Project_3
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
+git clone https://github.com/TheKyyn/project_3.git
+cd project_3
 ```
 
-### 3. Build and Run the Application with Docker Compose
-To build and run the services (PostgreSQL, Flask, Prometheus, Grafana):
+### Configurer la base de données
+
+Assurez-vous que Docker est démarré, puis exécutez :
+
 ```bash
 docker-compose up --build
 ```
-This will:
 
-- Start a PostgreSQL database.
-- Start the Flask web application at http://localhost:5001.
-- Start Prometheus at http://localhost:9090.
-- Start Grafana at http://localhost:3000.
+Cela téléchargera les images nécessaires et démarrera les services de base de données, backend, Prometheus, et Grafana.
 
-### 4. Access the Application
-Flask API:
+### Initialiser la Base de Données
 
-- http://localhost:5001 for the main page.
-- http://localhost:5001/data to view or post data.
-- http://localhost:5001/stats to view statistics.
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000
+Après le démarrage, connectez-vous au service de base de données pour créer la table principale `data_records` :
 
-### 5. Create the Database Table
-Once the services are running, you will need to create the data_records table. Open a new terminal and run:
 ```bash
 docker-compose exec db psql -U postgres -d DB_Project_3
 ```
-Then, create the table:
-```bash
+
+Dans le shell PostgreSQL, exécutez :
+
+```sql
 CREATE TABLE data_records (
     id SERIAL PRIMARY KEY,
     data_value TEXT NOT NULL,
@@ -69,32 +58,86 @@ CREATE TABLE data_records (
 );
 ```
 
-### 6. API Endpoints
-POST /data: To insert new data into the ```data_records``` table. The body should contain ```data_value``` and ```category```.
+Vous pouvez quitter PostgreSQL avec `\q`.
 
-Example request:
-```json
-{
-  "data_value": "Sample Data",
-  "category": "Sample Category"
-}
+## Utilisation
+
+### Accéder à l'Interface Utilisateur
+
+L'application frontend est accessible via `index.html` à la racine du projet. Ouvrez ce fichier dans un navigateur. Pour interagir avec les données, vous pouvez :
+
+- **Effectuer des recherches** : Saisissez une catégorie dans le champ et cliquez sur "Rechercher".
+- **Ajouter des données** : Utilisez le formulaire pour ajouter des données à la base.
+
+### Accéder à l'API
+
+Vous pouvez interagir avec l'API via les endpoints suivants :
+
+- **Récupérer les données** : `GET http://localhost:5001/data?category=example`
+- **Ajouter des données** : `POST http://localhost:5001/data` avec le corps JSON `{ "data_value": "Test Value", "category": "Test Category" }`
+- **Voir les statistiques par catégorie** : `GET http://localhost:5001/stats`
+- **Surveillance des métriques** : `GET http://localhost:5001/metrics`
+
+## Structure du Projet
+
 ```
-- GET /data: To retrieve all data from the ```data_records``` table. You can filter data by category by passing the ```category``` query parameter.
-- GET /stats: To retrieve statistics on the number of records per category.
-- GET /metrics: Prometheus metrics for monitoring.
+project_3/
+├── app.py                # Fichier principal de l'application Flask
+├── Dockerfile            # Dockerfile pour créer l'image du backend Flask
+├── docker-compose.yml    # Fichier Docker Compose pour orchestrer les services
+├── index.html            # Interface utilisateur de base en HTML/JavaScript
+├── requirements.txt      # Dépendances Python
+├── setup_db.sql          # Script SQL pour initialiser les tables
+├── prometheus.yml        # Configuration de Prometheus
+├── locustfile.py         # Scénario de test de charge pour Locust
+└── test_app.py           # Tests unitaires pour l'API
+```
 
-### Monitoring and Visualization
-- Prometheus is used for scraping metrics from the Flask application at http://localhost:9090.
-- Grafana is used for visualizing the metrics at http://localhost:3000.
+## Tests
 
-## Grafana Setup
-The default username and password for Grafana is admin / admin.
+Pour exécuter les tests unitaires, assurez-vous d'être dans un environnement où les dépendances Python sont installées, puis exécutez :
 
-### Stopping the Application
-To stop all services:
 ```bash
-docker-compose down
+python -m unittest test_app.py
 ```
 
-### License
-This project is licensed under the MIT License. See the LICENSE file for details.
+Cela va vérifier la fonctionnalité des principaux endpoints.
+
+## Surveillance et Monitoring
+
+Prometheus et Grafana sont inclus pour la surveillance des métriques de l'application :
+
+- **Prometheus** : accessible via http://localhost:9090
+- **Grafana** : accessible via http://localhost:3000
+  - Les identifiants par défaut sont `admin` / `admin`.
+
+Prometheus collecte les métriques de l'application Flask, visibles via l'URL `/metrics`.
+
+## Endpoints API
+
+### `GET /data`
+
+- **Description** : Récupère les données, avec une option de filtrage par catégorie.
+- **Paramètres de requête** :
+  - `category` (optionnel) : Filtre par catégorie.
+
+### `POST /data`
+
+- **Description** : Ajoute une nouvelle entrée de données.
+- **Corps JSON** :
+  - `data_value` : La valeur des données à stocker.
+  - `category` : La catégorie des données.
+
+### `GET /stats`
+
+- **Description** : Récupère les statistiques des données en comptant les occurrences par catégorie.
+
+### `GET /metrics`
+
+- **Description** : Expose les métriques de l'application pour Prometheus.
+
+---
+
+Pour toute question ou clarification, veuillez consulter le dépôt GitHub ou contacter le développeur.
+
+**Lien vers le dépôt** : [https://github.com/TheKyyn/project_3](https://github.com/TheKyyn/project_3)
